@@ -1,8 +1,11 @@
 package internal
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	yaml "sigs.k8s.io/yaml/goyaml.v3"
@@ -35,4 +38,40 @@ func WriteToFile(filePath string, node *yaml.Node, cfg Config) {
 	if err != nil {
 		log.Fatalf("Error writing file: %v", err)
 	}
+}
+
+func FindYamlFile(searchRoot string, file string) ([]string, error) {
+
+	var yamlSearchRoot string
+	var yamlFiles []string
+
+	if path.IsAbs(searchRoot) {
+		yamlSearchRoot = searchRoot
+	} else {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, fmt.Errorf("error getting working directory: %w", err)
+		}
+
+		yamlSearchRoot = filepath.Join(cwd, searchRoot)
+	}
+
+	err := filepath.WalkDir(yamlSearchRoot, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		absolutePath, _ := filepath.Abs(path)
+		fmt.Printf("Visited: %s\n", path)
+
+		if d.IsDir() && d.Name() == ".git" {
+			return filepath.SkipDir
+		}
+
+		if filepath.Base(path) == file {
+			yamlFiles = append(yamlFiles, absolutePath)
+		}
+		return nil
+	})
+	return yamlFiles, err
 }

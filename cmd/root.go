@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile, InputFile string
+var cfgFile, InputFile, SearchDir string
 var customSort []string
 var reverse, spaceTopKey bool
 var indent int
@@ -39,11 +39,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&reverse, "reverse", "r", false, "Reverse the order")
 	rootCmd.PersistentFlags().BoolVarP(&spaceTopKey, "space-top-key", "s", true, "Add an empty line beetween top level keys")
 	rootCmd.PersistentFlags().IntVarP(&indent, "indent", "t", 2, "Reverse the order")
+	rootCmd.PersistentFlags().StringVarP(&SearchDir, "search-dir", "d", "", "search dir")
 	rootCmd.MarkPersistentFlagRequired("input-file")
 	viper.BindPFlag("custom-sort", rootCmd.PersistentFlags().Lookup("custom-sort"))
 	viper.BindPFlag("reverse", rootCmd.PersistentFlags().Lookup("reverse"))
 	viper.BindPFlag("space-top-key", rootCmd.PersistentFlags().Lookup("space-top-key"))
 	viper.BindPFlag("indent", rootCmd.PersistentFlags().Lookup("indent"))
+	viper.BindPFlag("search-dir", rootCmd.PersistentFlags().Lookup("search-dir"))
 }
 
 func initConfig(cmd *cobra.Command, args []string) {
