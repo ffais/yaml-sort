@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
+	"sync"
 
 	internal "github.com/ffais/yaml-sort/internal"
 	"github.com/spf13/cobra"
@@ -10,30 +12,64 @@ import (
 
 var OutputFile string
 
-func init() {
-	rootCmd.AddCommand(sortCmd)
-	sortCmd.Flags().StringVarP(&OutputFile, "output-file", "o", "", "output file")
-	sortCmd.MarkFlagRequired("output-file")
-}
-
-func sort(cmd *cobra.Command, args []string) {
-	var node yaml.Node
-	fmt.Println("Sorting yaml file", InputFile, OutputFile)
-	internal.ParseYaml(InputFile, &node)
-	if node.Kind == yaml.DocumentNode && len(node.Content) > 0 {
-		rootNode := node.Content[0]
-		internal.SortYamlNodes(rootNode, Cfg)
-		if Cfg.SpaceTopKey {
-			internal.AddEmptyLinesBeforeTopLevelKeys(rootNode)
-		}
-	}
-
-	internal.WriteToFile(OutputFile, &node, Cfg)
-}
-
 var sortCmd = &cobra.Command{
 	Use:   "sort",
 	Short: "Sort yaml file",
 	Long:  "Sort yaml file",
-	Run:   sort,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		searchDir, _ := cmd.Flags().GetString("search-dir")
+		if searchDir == "" {
+			cmd.MarkFlagRequired("output-file")
+		}
+	},
+	Run: sort,
+}
+
+func init() {
+	rootCmd.AddCommand(sortCmd)
+	sortCmd.Flags().StringVarP(&OutputFile, "output-file", "o", "", "output file")
+}
+
+func sort(cmd *cobra.Command, args []string) {
+	if Cfg.SearchDir != "" {
+		parallelism := runtime.NumCPU() * 2
+		yamls, _ := internal.FindYamlFile(Cfg.SearchDir, InputFile)
+		parallelProcessing(yamls, parallelism, sortYamlFile)
+	} else {
+		sortYamlFile(InputFile, OutputFile, Cfg)
+	}
+}
+
+func sortYamlFile(inputFile string, outputFile string, cfg internal.Config) {
+	var node yaml.Node
+	fmt.Println("Sorting yaml file", InputFile, OutputFile)
+	internal.ParseYaml(inputFile, &node)
+	internal.SortYamlNodes(&node, cfg)
+	if Cfg.SpaceTopKey {
+		internal.AddEmptyLinesBeforeTopLevelKeys(&node)
+	}
+	internal.WriteToFile(outputFile, &node, cfg)
+}
+
+func parallelProcessing(files []string, parallelism int, fn func(inputFile string, outputFile string, cfg internal.Config)) {
+	workChan := make(chan string)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(parallelism)
+
+	for i := 0; i < parallelism; i++ {
+		go func() {
+			defer wg.Done()
+			for file := range workChan {
+				fn(file, file, Cfg)
+			}
+		}()
+	}
+	sliceLen := len(files)
+	for i := 0; i < sliceLen; i++ {
+		workChan <- files[i]
+	}
+
+	close(workChan)
+	wg.Wait()
 }

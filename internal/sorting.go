@@ -2,23 +2,26 @@ package internal
 
 import (
 	"slices"
+	"strings"
 
 	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 
 // sortYamlNodes recursively sorts YAML nodes
 func SortYamlNodes(node *yaml.Node, cfg Config) {
+	var rootNode *yaml.Node
 	if node == nil {
 		return
 	}
+	rootNode = extractRootNode(*node)
 	switch node.Kind {
 	case yaml.MappingNode:
-		sortMapNodes(node, cfg)
-		for _, content := range node.Content {
+		sortMapNodes(rootNode, cfg)
+		for _, content := range rootNode.Content {
 			SortYamlNodes(content, cfg)
 		}
 	case yaml.SequenceNode:
-		for _, content := range node.Content {
+		for _, content := range rootNode.Content {
 			SortYamlNodes(content, cfg)
 		}
 	}
@@ -78,4 +81,38 @@ func customSort(keys *[]string, cfg Config) {
 	if found {
 		*keys = slices.Concat(customSorted, *keys)
 	}
+}
+
+// addEmptyLinesBeforeTopLevelKeys adds empty lines before top-level keys
+func AddEmptyLinesBeforeTopLevelKeys(node *yaml.Node) {
+	rootNode := extractRootNode(*node)
+	if rootNode.Kind != yaml.MappingNode {
+		return
+	}
+
+	for i := 2; i < len(rootNode.Content); i += 2 {
+		if i >= len(rootNode.Content) {
+			break
+		}
+		keyNode := rootNode.Content[i]
+
+		// Only add empty lines for top-level keys
+		if keyNode.HeadComment == "" {
+			keyNode.HeadComment = "\n"
+		} else {
+			// If there's already a comment, prepend a newline
+			if !strings.HasPrefix(keyNode.HeadComment, "\n") {
+				keyNode.HeadComment = "\n" + keyNode.HeadComment
+			}
+		}
+	}
+}
+
+func extractRootNode(node yaml.Node) (rootNode *yaml.Node) {
+	if node.Kind == yaml.DocumentNode && len(node.Content) > 0 {
+		rootNode = node.Content[0]
+	} else {
+		rootNode = &node
+	}
+	return
 }
