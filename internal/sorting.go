@@ -14,7 +14,7 @@ func SortYamlNodes(node *yaml.Node, cfg Config) {
 		return
 	}
 	rootNode = extractRootNode(*node)
-	switch node.Kind {
+	switch rootNode.Kind {
 	case yaml.MappingNode:
 		sortMapNodes(rootNode, cfg)
 		for _, content := range rootNode.Content {
