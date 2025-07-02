@@ -17,8 +17,7 @@ var Cfg internal.Config
 
 var rootCmd = &cobra.Command{
 	Use:              "yaml-sort",
-	Short:            "yaml-sort sort yaml file presernvig comments and with custom order",
-	Long:             `yaml-sort sort yaml file presernvig comments and with custom order`,
+	Short:            "Yaml-Sort format, sort and check YAML files",
 	PersistentPreRun: initConfig,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Welcome to Yaml-Sort! Use --help to see available commands.")
@@ -33,14 +32,13 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
-	rootCmd.PersistentFlags().StringVarP(&InputFile, "input-file", "i", "", "input file")
-	rootCmd.PersistentFlags().StringSliceVarP(&customSort, "custom-sort", "c", []string{}, "Custom-Order")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Path to config file")
+	rootCmd.PersistentFlags().StringVarP(&InputFile, "input-file", "i", "", "Path to the YAML file you want to sort, can be an absolute path or a file name")
+	rootCmd.PersistentFlags().StringSliceVarP(&customSort, "custom-sort", "c", []string{}, "Sort a given YAML with custom order provided as a comma-separated keyword list.")
 	rootCmd.PersistentFlags().BoolVarP(&reverse, "reverse", "r", false, "Reverse the order")
 	rootCmd.PersistentFlags().BoolVarP(&spaceTopKey, "space-top-key", "s", true, "Add an empty line beetween top level keys")
 	rootCmd.PersistentFlags().IntVarP(&indent, "indent", "t", 2, "Reverse the order")
-	rootCmd.PersistentFlags().StringVarP(&SearchDir, "search-dir", "d", "", "search dir")
-	rootCmd.MarkPersistentFlagRequired("input-file")
+	rootCmd.PersistentFlags().StringVarP(&SearchDir, "search-dir", "d", "", "Directory to search recursively for YAML file based on the name provided with --input-file")
 	viper.BindPFlag("custom-sort", rootCmd.PersistentFlags().Lookup("custom-sort"))
 	viper.BindPFlag("reverse", rootCmd.PersistentFlags().Lookup("reverse"))
 	viper.BindPFlag("space-top-key", rootCmd.PersistentFlags().Lookup("space-top-key"))

@@ -14,12 +14,13 @@ var OutputFile string
 
 var sortCmd = &cobra.Command{
 	Use:   "sort",
-	Short: "Sort yaml file",
-	Long:  "Sort yaml file",
+	Short: "Yaml-Sort sorts YAML files alphabetically.",
+	Long:  `Yaml-Sort sorts YAML files alphabetically preserving comments, anchor and with support for custom order.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		searchDir, _ := cmd.Flags().GetString("search-dir")
 		if searchDir == "" {
 			cmd.MarkFlagRequired("output-file")
+			cmd.MarkPersistentFlagRequired("input-file")
 		}
 	},
 	Run: sort,
@@ -27,7 +28,7 @@ var sortCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(sortCmd)
-	sortCmd.Flags().StringVarP(&OutputFile, "output-file", "o", "", "output file")
+	sortCmd.Flags().StringVarP(&OutputFile, "output-file", "o", "", "The YAML file to output sorted content to.")
 }
 
 func sort(cmd *cobra.Command, args []string) {
