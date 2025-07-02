@@ -19,6 +19,8 @@ builds:
       - darwin
       - linux
       - windows
+    ldflags:
+      - -s -w -X cmd.version={{.Version}} -X cmd.commitHash={{.Commit}} -X cmd.buildTimestamp={{.Date}}
 archives:
   - id: default
     name_template: >-
