@@ -1,0 +1,38 @@
+version: 2
+project_name: yaml-sort
+before:
+  hooks:
+    - go mod download
+    - go test ./...
+builds:
+  - main: main.go
+    env:
+      - CGO_ENABLED=0
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
+      - 7
+    goos:
+      - darwin
+      - linux
+      - windows
+archives:
+  - id: default
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "arm" }}{{ .Arch }}{{ .Arm }}
+      {{- else }}{{ .Arch }}{{ end }}
+
+checksum:
+  name_template: checksums.txt
+
+signs:
+- artifacts: checksum
+  args: [ '{{ if index .Env "GPG_FINGERPRINT"  }}-u {{ .Env.GPG_FINGERPRINT }}{{ else }}-s{{ end }}', "--output", "${signature}","--detach-sign", "${artifact}"]
