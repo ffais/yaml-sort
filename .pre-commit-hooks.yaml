@@ -3,4 +3,7 @@
     description: Yaml-Sort sorts content of YAML files alphabetically preserving comments, anchor and with support for custom order..
     entry: yaml-sort
     language: golang
-    types: [file]
+    types: [yaml]
+    require_serial: true
+    pass_filenames: false
+    args: []
