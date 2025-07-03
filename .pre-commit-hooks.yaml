@@ -1,0 +1,6 @@
+-   id: yaml-sort
+    name: Sort YAML file
+    description: Yaml-Sort sorts content of YAML files alphabetically preserving comments, anchor and with support for custom order..
+    entry: yaml-sort
+    language: golang
+    types: [file]
