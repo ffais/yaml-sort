@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 
 	internal "github.com/ffais/yaml-sort/internal"
@@ -13,8 +14,8 @@ var OutputFile string
 
 var sortCmd = &cobra.Command{
 	Use:   "sort",
-	Short: "Yaml-Sort sorts YAML files alphabetically.",
-	Long:  `Yaml-Sort sorts YAML files alphabetically preserving comments, anchor and with support for custom order.`,
+	Short: "Yaml-Sort sorts content of YAML files alphabetically.",
+	Long:  `Yaml-Sort sorts content of YAML files alphabetically preserving comments, anchor and with support for custom order.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		searchDir, _ := cmd.Flags().GetString("search-dir")
 		if searchDir == "" {
@@ -32,8 +33,7 @@ func init() {
 
 func sort(cmd *cobra.Command, args []string) {
 	if Cfg.SearchDir != "" {
-		// parallelism := runtime.NumCPU() * 2
-		parallelism := 1
+		parallelism := runtime.NumCPU() * 2
 		yamls, _ := internal.FindYamlFile(Cfg.SearchDir, InputFile)
 		parallelProcessing(yamls, parallelism, sortYamlFile)
 	} else {
