@@ -13,17 +13,21 @@ func SortYamlNodes(node *yaml.Node, cfg Config) {
 	if node == nil {
 		return
 	}
-	rootNode = extractRootNode(*node)
-	switch rootNode.Kind {
+	switch node.Kind {
 	case yaml.MappingNode:
-		sortMapNodes(rootNode, cfg)
-		for _, content := range rootNode.Content {
+		sortMapNodes(node, cfg)
+		for _, content := range node.Content {
 			SortYamlNodes(content, cfg)
+			node = content
 		}
 	case yaml.SequenceNode:
-		for _, content := range rootNode.Content {
+		for _, content := range node.Content {
 			SortYamlNodes(content, cfg)
+			node = content
 		}
+	case yaml.DocumentNode:
+		rootNode = extractRootNode(*node)
+		SortYamlNodes(rootNode, cfg)
 	}
 }
 

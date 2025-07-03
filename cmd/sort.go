@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"runtime"
 	"sync"
 
 	internal "github.com/ffais/yaml-sort/internal"
@@ -33,7 +32,8 @@ func init() {
 
 func sort(cmd *cobra.Command, args []string) {
 	if Cfg.SearchDir != "" {
-		parallelism := runtime.NumCPU() * 2
+		// parallelism := runtime.NumCPU() * 2
+		parallelism := 1
 		yamls, _ := internal.FindYamlFile(Cfg.SearchDir, InputFile)
 		parallelProcessing(yamls, parallelism, sortYamlFile)
 	} else {
