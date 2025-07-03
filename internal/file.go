@@ -62,7 +62,7 @@ func FindYamlFile(searchRoot string, file string) ([]string, error) {
 		}
 
 		absolutePath, _ := filepath.Abs(path)
-		fmt.Printf("Visited: %s\n", path)
+		// fmt.Printf("Visited: %s\n", path)
 
 		if d.IsDir() && d.Name() == ".git" {
 			return filepath.SkipDir

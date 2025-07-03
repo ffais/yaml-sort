@@ -43,7 +43,7 @@ func sort(cmd *cobra.Command, args []string) {
 
 func sortYamlFile(inputFile string, outputFile string, cfg internal.Config) {
 	var node yaml.Node
-	fmt.Println("Sorting yaml file", InputFile, OutputFile)
+	fmt.Println("Sorting yaml file", inputFile)
 	internal.ParseYaml(inputFile, &node)
 	internal.SortYamlNodes(&node, cfg)
 	if Cfg.SpaceTopKey {
