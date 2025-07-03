@@ -2,6 +2,7 @@ package internal
 
 import (
 	"slices"
+	"sort"
 	"strings"
 
 	yaml "sigs.k8s.io/yaml/goyaml.v3"
@@ -21,6 +22,7 @@ func SortYamlNodes(node *yaml.Node, cfg Config) {
 			node = content
 		}
 	case yaml.SequenceNode:
+		sortSequenceNodes(node, cfg)
 		for _, content := range node.Content {
 			SortYamlNodes(content, cfg)
 			node = content
@@ -61,6 +63,44 @@ func sortMapNodes(node *yaml.Node, cfg Config) {
 	newContent := make([]*yaml.Node, 0)
 	for _, key := range keys {
 		newContent = append(newContent, pairs[key][0], pairs[key][1])
+	}
+
+	node.Content = newContent
+}
+
+// sortSequenceNodes sorts the elements of a YAML sequence node
+func sortSequenceNodes(node *yaml.Node, cfg Config) {
+	if node.Kind != yaml.SequenceNode || len(node.Content) < 1 {
+		return
+	}
+
+	// Create a slice of sequence items with their string representation for sorting
+	type sortableItem struct {
+		original *yaml.Node
+		sortKey  string
+	}
+
+	items := make([]sortableItem, len(node.Content))
+	for i, item := range node.Content {
+		// Convert the node to a string for comparison
+		var sb strings.Builder
+		encoder := yaml.NewEncoder(&sb)
+		encoder.Encode(item)
+		items[i] = sortableItem{
+			original: item,
+			sortKey:  sb.String(),
+		}
+	}
+
+	// Sort the items based on their string representation
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].sortKey < items[j].sortKey
+	})
+
+	// Rebuild the content in sorted order
+	newContent := make([]*yaml.Node, len(items))
+	for i, item := range items {
+		newContent[i] = item.original
 	}
 
 	node.Content = newContent
