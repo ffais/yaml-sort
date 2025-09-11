@@ -70,7 +70,7 @@ func sortMapNodes(node *yaml.Node, cfg Config) {
 
 // sortSequenceNodes sorts the elements of a YAML sequence node
 func sortSequenceNodes(node *yaml.Node, cfg Config) {
-	if node.Kind != yaml.SequenceNode || len(node.Content) < 1 {
+	if node.Kind != yaml.SequenceNode || len(node.Content) < 1 || !cfg.SortList {
 		return
 	}
 

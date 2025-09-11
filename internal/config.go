@@ -6,4 +6,5 @@ type Config struct {
 	Indent      int      `mapstructure:"indent"`
 	SpaceTopKey bool     `mapstructure:"space-top-key"`
 	SearchDir   string   `mapstructure:"search-dir"`
+	SortList    bool     `mapstructure:"sort-list"`
 }

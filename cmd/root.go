@@ -11,7 +11,7 @@ import (
 
 var cfgFile, InputFile, SearchDir string
 var customSort []string
-var reverse, spaceTopKey bool
+var reverse, spaceTopKey, sortList bool
 var indent int
 var Cfg internal.Config
 
@@ -36,11 +36,13 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&InputFile, "input-file", "i", "", "Path to the YAML file you want to sort, can be an absolute path or a file name")
 	rootCmd.PersistentFlags().StringSliceVarP(&customSort, "custom-sort", "c", []string{}, "Sort a given YAML with custom order provided as a comma-separated keyword list.")
 	rootCmd.PersistentFlags().BoolVarP(&reverse, "reverse", "r", false, "Reverse the order")
+	rootCmd.PersistentFlags().BoolVarP(&sortList, "sort-list", "l", false, "Enable sorting list")
 	rootCmd.PersistentFlags().BoolVarP(&spaceTopKey, "space-top-key", "s", true, "Add an empty line beetween top level keys")
 	rootCmd.PersistentFlags().IntVarP(&indent, "indent", "t", 2, "Reverse the order")
 	rootCmd.PersistentFlags().StringVarP(&SearchDir, "search-dir", "d", "", "Directory to search recursively for YAML file based on the name provided with --input-file")
 	viper.BindPFlag("custom-sort", rootCmd.PersistentFlags().Lookup("custom-sort"))
 	viper.BindPFlag("reverse", rootCmd.PersistentFlags().Lookup("reverse"))
+	viper.BindPFlag("sort-list", rootCmd.PersistentFlags().Lookup("sort-list"))
 	viper.BindPFlag("space-top-key", rootCmd.PersistentFlags().Lookup("space-top-key"))
 	viper.BindPFlag("indent", rootCmd.PersistentFlags().Lookup("indent"))
 	viper.BindPFlag("search-dir", rootCmd.PersistentFlags().Lookup("search-dir"))

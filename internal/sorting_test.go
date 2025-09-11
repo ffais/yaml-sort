@@ -47,7 +47,7 @@ func TestSortYamlNodes(t *testing.T) {
 	if err := yaml.Unmarshal(yamlSorted, &want); err != nil {
 		t.Errorf("Error unmarshaling the sorted source YAML: %s", err)
 	}
-	SortYamlNodes(&got, Config{})
+	SortYamlNodes(&got, Config{SortList: true})
 	btGot, _ := yaml.Marshal(got.Content[0])
 	btWant, _ := yaml.Marshal(want.Content[0])
 	ok := reflect.DeepEqual(btGot, btWant)
