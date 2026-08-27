@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	yaml "sigs.k8s.io/yaml/goyaml.v3"
+	yaml "go.yaml.in/yaml/v3"
 )
 
 func ParseYaml(filePath string) ([]*yaml.Node, error) {

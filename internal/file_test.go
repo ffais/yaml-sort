@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	yaml "sigs.k8s.io/yaml/goyaml.v3"
+	yaml "go.yaml.in/yaml/v3"
 )
 
 func TestParseAndWriteMultipleDocuments(t *testing.T) {
