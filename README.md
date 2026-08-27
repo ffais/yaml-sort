@@ -92,5 +92,4 @@ Pull requests are welcome! Please ensure:
 
 ## License
 
-Apache 2.0 - See [LICENSE](LICENSE) file for details.
-```
+Apache 2.0 - See [LICENSE](LICENSE) for details.
