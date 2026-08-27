@@ -4,15 +4,15 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ffais/yaml-sort)](https://goreportcard.com/report/github.com/ffais/yaml-sort)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ffais/yaml-sort.svg)](https://pkg.go.dev/github.com/ffais/yaml-sort)
 
-A command-line tool to sort YAML files by keys while preserving comments, structure, and formatting.
+A command-line tool to rewrite YAML files with deterministic key ordering while retaining comments and anchors.
 
 ## Features
 
 - **Preserves comments** - Maintains all inline and standalone comments
 - **Customizable sorting** - Choose between alphabetical or custom key order
-- **Format preservation** - Keeps original indentation and style
+- **Configurable formatting** - Controls indentation and spacing between top-level keys
 - **Multi-document support** - Handles YAML files with multiple documents (`---` separators)
-- **Strict mode** - Optionally validates YAML during processing
+- **Recursive search** - Sorts every file with a given name under a directory
 
 ## Installation
 
@@ -28,46 +28,59 @@ Download from the [Releases page](https://github.com/ffais/yaml-sort/releases)
 
 Basic sorting:
 ```bash
-yaml-sort -f input.yaml -o sorted.yaml
+yaml-sort sort --input-file input.yaml --output-file sorted.yaml
 ```
 
 Sort with custom key order:
 ```bash
-yaml-sort -f input.yaml -o sorted.yaml -k "name,version,dependencies"
+yaml-sort sort -i input.yaml -o sorted.yaml -c "name,version,dependencies"
 ```
 
 Sort in-place (modify file directly):
 ```bash
-yaml-sort -f input.yaml -i
+yaml-sort sort --in-place --input-file input.yaml
+yaml-sort sort --in-place config/one.yaml config/two.yaml
+```
+
+Recursively sort files with the same name:
+```bash
+yaml-sort sort --search-dir ./services --input-file values.yaml
 ```
 
 ## Options
 
 ```
-  -f, --file string       Input YAML file
-  -o, --output string     Output file (defaults to stdout if not specified)
-  -i, --in-place          Modify input file directly
-  -k, --keys string       Comma-separated list of keys for custom ordering
-  -s, --strict            Enable strict YAML parsing
-  -v, --version           Display version information
-  -h, --help              Show help message
+  -i, --input-file string    Input YAML file
+  -o, --output-file string   Output YAML file
+  -w, --in-place             Replace input files with sorted content
+  -c, --custom-sort strings  Comma-separated keys to place first
+  -r, --reverse              Reverse sort order
+  -l, --sort-list            Sort sequence values
+  -s, --space-top-key        Add spacing between top-level keys (default true)
+  -t, --indent int           Indentation width (default 2)
+  -d, --search-dir string    Recursively find files named by --input-file
+      --config string        Read options from a configuration file
+  -h, --help                 Show help
 ```
+
+Run `yaml-sort version` to display build information. Output must be provided with
+`--output-file` unless `--in-place` or `--search-dir` is used.
 
 ## Examples
 
 1. Sort a Kubernetes manifest:
 ```bash
-yaml-sort -f deployment.yaml -o sorted-deployment.yaml
+yaml-sort sort -i deployment.yaml -o sorted-deployment.yaml
 ```
 
 2. Sort with specific key priority:
 ```bash
-yaml-sort -f config.yaml -k "apiVersion,kind,metadata,spec"
+yaml-sort sort -i config.yaml -o sorted-config.yaml -c "apiVersion,kind,metadata,spec"
 ```
 
-3. Pipe input/output:
+3. Sort all `values.yaml` files under a directory:
 ```bash
-cat input.yaml | yaml-sort > sorted.yaml
+yaml-sort sort -d ./clusters -i values.yaml
 ```
 
 ## Contributing
