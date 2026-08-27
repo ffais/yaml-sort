@@ -17,16 +17,24 @@ func TestParseAndWriteMultipleDocuments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	documents := ParseYaml(inputPath)
+	documents, err := ParseYaml(inputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(documents) != 2 {
 		t.Fatalf("got %d documents, want 2", len(documents))
 	}
 	for _, document := range documents {
 		SortYamlNodes(document, Config{})
 	}
-	WriteToFile(outputPath, documents, Config{Indent: 2})
+	if err := WriteToFile(outputPath, documents, Config{Indent: 2}); err != nil {
+		t.Fatal(err)
+	}
 
-	roundTripDocuments := ParseYaml(outputPath)
+	roundTripDocuments, err := ParseYaml(outputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(roundTripDocuments) != 2 {
 		t.Fatalf("round trip produced %d documents, want 2", len(roundTripDocuments))
 	}
@@ -43,7 +51,9 @@ func TestWriteToFileReplacesExistingFileAtomically(t *testing.T) {
 	if err := yaml.Unmarshal([]byte("new: content\n"), &document); err != nil {
 		t.Fatal(err)
 	}
-	WriteToFile(outputPath, []*yaml.Node{&document}, Config{Indent: 2})
+	if err := WriteToFile(outputPath, []*yaml.Node{&document}, Config{Indent: 2}); err != nil {
+		t.Fatal(err)
+	}
 
 	output, err := os.ReadFile(outputPath)
 	if err != nil {
@@ -65,5 +75,16 @@ func TestWriteToFileReplacesExistingFileAtomically(t *testing.T) {
 	}
 	if len(temporaryFiles) != 0 {
 		t.Fatalf("temporary files were not cleaned up: %v", temporaryFiles)
+	}
+}
+
+func TestParseYamlReturnsDecodeError(t *testing.T) {
+	inputPath := filepath.Join(t.TempDir(), "invalid.yaml")
+	if err := os.WriteFile(inputPath, []byte("key: [\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := ParseYaml(inputPath); err == nil {
+		t.Fatal("ParseYaml returned nil error for invalid YAML")
 	}
 }

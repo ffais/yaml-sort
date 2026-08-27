@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 	"sync"
@@ -22,7 +23,7 @@ var sortCmd = &cobra.Command{
 			cmd.MarkPersistentFlagRequired("input-file")
 		}
 	},
-	Run: sort,
+	RunE: sort,
 }
 
 func init() {
@@ -30,30 +31,42 @@ func init() {
 	sortCmd.Flags().StringVarP(&OutputFile, "output-file", "o", "", "The YAML file to output sorted content to.")
 }
 
-func sort(cmd *cobra.Command, args []string) {
+func sort(cmd *cobra.Command, args []string) error {
 	if Cfg.SearchDir != "" {
 		parallelism := runtime.NumCPU() * 2
-		yamls, _ := internal.FindYamlFile(Cfg.SearchDir, InputFile)
-		parallelProcessing(yamls, parallelism, sortYamlFile)
-	} else {
-		sortYamlFile(InputFile, OutputFile, Cfg)
+		yamls, err := internal.FindYamlFile(Cfg.SearchDir, InputFile)
+		if err != nil {
+			return fmt.Errorf("search for YAML files: %w", err)
+		}
+		if len(yamls) == 0 {
+			return fmt.Errorf("no files named %q found under %q", InputFile, Cfg.SearchDir)
+		}
+		return parallelProcessing(yamls, parallelism, sortYamlFile)
 	}
+	return sortYamlFile(InputFile, OutputFile, Cfg)
 }
 
-func sortYamlFile(inputFile string, outputFile string, cfg internal.Config) {
+func sortYamlFile(inputFile string, outputFile string, cfg internal.Config) error {
 	fmt.Println("Sorting yaml file", inputFile)
-	documents := internal.ParseYaml(inputFile)
+	documents, err := internal.ParseYaml(inputFile)
+	if err != nil {
+		return fmt.Errorf("sort %q: %w", inputFile, err)
+	}
 	for _, document := range documents {
 		internal.SortYamlNodes(document, cfg)
 		if Cfg.SpaceTopKey {
 			internal.AddEmptyLinesBeforeTopLevelKeys(document)
 		}
 	}
-	internal.WriteToFile(outputFile, documents, cfg)
+	if err := internal.WriteToFile(outputFile, documents, cfg); err != nil {
+		return fmt.Errorf("sort %q: %w", inputFile, err)
+	}
+	return nil
 }
 
-func parallelProcessing(files []string, parallelism int, fn func(inputFile string, outputFile string, cfg internal.Config)) {
+func parallelProcessing(files []string, parallelism int, fn func(inputFile string, outputFile string, cfg internal.Config) error) error {
 	workChan := make(chan string)
+	errorChan := make(chan error, len(files))
 
 	wg := &sync.WaitGroup{}
 	wg.Add(parallelism)
@@ -62,7 +75,9 @@ func parallelProcessing(files []string, parallelism int, fn func(inputFile strin
 		go func() {
 			defer wg.Done()
 			for file := range workChan {
-				fn(file, file, Cfg)
+				if err := fn(file, file, Cfg); err != nil {
+					errorChan <- err
+				}
 			}
 		}()
 	}
@@ -73,4 +88,11 @@ func parallelProcessing(files []string, parallelism int, fn func(inputFile strin
 
 	close(workChan)
 	wg.Wait()
+	close(errorChan)
+
+	var processingErrors []error
+	for err := range errorChan {
+		processingErrors = append(processingErrors, err)
+	}
+	return errors.Join(processingErrors...)
 }

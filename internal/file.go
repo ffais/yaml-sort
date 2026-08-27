@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,10 +12,10 @@ import (
 	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 
-func ParseYaml(filePath string) []*yaml.Node {
+func ParseYaml(filePath string) ([]*yaml.Node, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Fatalf("Error reading file: %v", err)
+		return nil, fmt.Errorf("read YAML file: %w", err)
 	}
 	defer file.Close()
 
@@ -29,27 +28,27 @@ func ParseYaml(filePath string) []*yaml.Node {
 			break
 		}
 		if err != nil {
-			log.Fatalf("Error unmarshaling YAML: %v", err)
+			return nil, fmt.Errorf("decode YAML document: %w", err)
 		}
 		documents = append(documents, &document)
 	}
-	return documents
+	return documents, nil
 }
 
-func WriteToFile(filePath string, documents []*yaml.Node, cfg Config) {
+func WriteToFile(filePath string, documents []*yaml.Node, cfg Config) error {
 	// Marshal back to YAML with comments
 	var output strings.Builder
 	encoder := yaml.NewEncoder(&output)
 	encoder.SetIndent(cfg.Indent)
 	for _, document := range documents {
 		if err := encoder.Encode(document); err != nil {
-			log.Fatalf("Error marshaling YAML: %v", err)
+			return fmt.Errorf("encode YAML document: %w", err)
 		}
 	}
-	err := writeFileAtomically(filePath, []byte(output.String()))
-	if err != nil {
-		log.Fatalf("Error writing file: %v", err)
+	if err := writeFileAtomically(filePath, []byte(output.String())); err != nil {
+		return fmt.Errorf("write YAML file: %w", err)
 	}
+	return nil
 }
 
 func writeFileAtomically(filePath string, data []byte) error {
