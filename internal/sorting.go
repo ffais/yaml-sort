@@ -40,7 +40,7 @@ func sortMapNodes(node *yaml.Node, cfg Config) {
 	}
 
 	keys := make([]string, 0)
-	pairs := make(map[string][]*yaml.Node)
+	pairs := make(map[string][][]*yaml.Node)
 	for i := 0; i < len(node.Content); i += 2 {
 		if i+1 >= len(node.Content) {
 			break
@@ -49,7 +49,7 @@ func sortMapNodes(node *yaml.Node, cfg Config) {
 		valueNode := node.Content[i+1]
 		key := keyNode.Value
 		keys = append(keys, key)
-		pairs[key] = []*yaml.Node{keyNode, valueNode}
+		pairs[key] = append(pairs[key], []*yaml.Node{keyNode, valueNode})
 	}
 	if cfg.CustomSort != nil {
 		customSort(&keys, cfg)
@@ -62,7 +62,9 @@ func sortMapNodes(node *yaml.Node, cfg Config) {
 	}
 	newContent := make([]*yaml.Node, 0)
 	for _, key := range keys {
-		newContent = append(newContent, pairs[key][0], pairs[key][1])
+		pair := pairs[key][0]
+		pairs[key] = pairs[key][1:]
+		newContent = append(newContent, pair...)
 	}
 
 	node.Content = newContent

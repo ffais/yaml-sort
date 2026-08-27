@@ -55,3 +55,22 @@ func TestSortYamlNodes(t *testing.T) {
 		t.Errorf("got %s, want %s", btGot, btWant)
 	}
 }
+
+func TestSortYamlNodesPreservesDuplicateKeys(t *testing.T) {
+	var node yaml.Node
+	if err := yaml.Unmarshal([]byte("b: third\na: first\na: second\n"), &node); err != nil {
+		t.Fatal(err)
+	}
+
+	SortYamlNodes(&node, Config{})
+
+	root := node.Content[0]
+	got := make([]string, 0, len(root.Content))
+	for _, content := range root.Content {
+		got = append(got, content.Value)
+	}
+	want := []string{"a", "first", "a", "second", "b", "third"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got mapping content %q, want %q", got, want)
+	}
+}
