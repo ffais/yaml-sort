@@ -7,7 +7,6 @@ import (
 
 	internal "github.com/ffais/yaml-sort/internal"
 	"github.com/spf13/cobra"
-	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 
 var OutputFile string
@@ -42,14 +41,15 @@ func sort(cmd *cobra.Command, args []string) {
 }
 
 func sortYamlFile(inputFile string, outputFile string, cfg internal.Config) {
-	var node yaml.Node
 	fmt.Println("Sorting yaml file", inputFile)
-	internal.ParseYaml(inputFile, &node)
-	internal.SortYamlNodes(&node, cfg)
-	if Cfg.SpaceTopKey {
-		internal.AddEmptyLinesBeforeTopLevelKeys(&node)
+	documents := internal.ParseYaml(inputFile)
+	for _, document := range documents {
+		internal.SortYamlNodes(document, cfg)
+		if Cfg.SpaceTopKey {
+			internal.AddEmptyLinesBeforeTopLevelKeys(document)
+		}
 	}
-	internal.WriteToFile(outputFile, &node, cfg)
+	internal.WriteToFile(outputFile, documents, cfg)
 }
 
 func parallelProcessing(files []string, parallelism int, fn func(inputFile string, outputFile string, cfg internal.Config)) {
