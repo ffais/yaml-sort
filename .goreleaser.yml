@@ -20,7 +20,7 @@ builds:
       - linux
       - windows
     ldflags:
-      - -s -w -X cmd.version={{.Version}} -X cmd.commitHash={{.Commit}} -X cmd.buildTimestamp={{.Date}}
+      - -s -w -X github.com/ffais/yaml-sort/cmd.version={{.Version}} -X github.com/ffais/yaml-sort/cmd.commitHash={{.Commit}} -X github.com/ffais/yaml-sort/cmd.buildTimestamp={{.Date}}
 archives:
   - id: default
     name_template: >-
