@@ -96,6 +96,9 @@ func sortSequenceNodes(node *yaml.Node, cfg Config) {
 
 	// Sort the items based on their string representation
 	sort.Slice(items, func(i, j int) bool {
+		if cfg.Reverse {
+			return items[i].sortKey > items[j].sortKey
+		}
 		return items[i].sortKey < items[j].sortKey
 	})
 

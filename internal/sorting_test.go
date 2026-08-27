@@ -74,3 +74,22 @@ func TestSortYamlNodesPreservesDuplicateKeys(t *testing.T) {
 		t.Fatalf("got mapping content %q, want %q", got, want)
 	}
 }
+
+func TestSortYamlNodesReversesSequences(t *testing.T) {
+	var node yaml.Node
+	if err := yaml.Unmarshal([]byte("- a\n- z\n- m\n"), &node); err != nil {
+		t.Fatal(err)
+	}
+
+	SortYamlNodes(&node, Config{SortList: true, Reverse: true})
+
+	root := node.Content[0]
+	got := make([]string, 0, len(root.Content))
+	for _, content := range root.Content {
+		got = append(got, content.Value)
+	}
+	want := []string{"z", "m", "a"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got sequence %q, want %q", got, want)
+	}
+}
