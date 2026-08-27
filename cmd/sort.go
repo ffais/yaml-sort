@@ -14,9 +14,9 @@ var OutputFile string
 var InPlace bool
 
 var sortCmd = &cobra.Command{
-	Use:   "sort",
-	Short: "Yaml-Sort sorts content of YAML files alphabetically.",
-	Long:  `Yaml-Sort sorts content of YAML files alphabetically preserving comments, anchor and with support for custom order.`,
+	Use:     "sort",
+	Short:   "Yaml-Sort sorts content of YAML files alphabetically.",
+	Long:    `Yaml-Sort sorts content of YAML files alphabetically preserving comments, anchor and with support for custom order.`,
 	PreRunE: validateSortFlags,
 	RunE:    sort,
 }

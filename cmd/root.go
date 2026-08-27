@@ -38,7 +38,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&reverse, "reverse", "r", false, "Reverse the order")
 	rootCmd.PersistentFlags().BoolVarP(&sortList, "sort-list", "l", false, "Enable sorting list")
 	rootCmd.PersistentFlags().BoolVarP(&spaceTopKey, "space-top-key", "s", true, "Add an empty line beetween top level keys")
-	rootCmd.PersistentFlags().IntVarP(&indent, "indent", "t", 2, "Reverse the order")
+	rootCmd.PersistentFlags().IntVarP(&indent, "indent", "t", 2, "Indentation space")
 	rootCmd.PersistentFlags().StringVarP(&SearchDir, "search-dir", "d", "", "Directory to search recursively for YAML file based on the name provided with --input-file")
 	viper.BindPFlag("custom-sort", rootCmd.PersistentFlags().Lookup("custom-sort"))
 	viper.BindPFlag("reverse", rootCmd.PersistentFlags().Lookup("reverse"))

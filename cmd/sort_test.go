@@ -50,13 +50,13 @@ func TestValidateSortFlags(t *testing.T) {
 	})
 
 	tests := []struct {
-		name      string
-		inputFile string
+		name       string
+		inputFile  string
 		outputFile string
-		inPlace   bool
-		searchDir string
-		args      []string
-		wantError bool
+		inPlace    bool
+		searchDir  string
+		args       []string
+		wantError  bool
 	}{
 		{name: "input and output", inputFile: "in.yaml", outputFile: "out.yaml"},
 		{name: "single file in place", inputFile: "in.yaml", inPlace: true},
