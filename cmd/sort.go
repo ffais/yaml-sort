@@ -11,27 +11,26 @@ import (
 )
 
 var OutputFile string
+var InPlace bool
 
 var sortCmd = &cobra.Command{
 	Use:   "sort",
 	Short: "Yaml-Sort sorts content of YAML files alphabetically.",
 	Long:  `Yaml-Sort sorts content of YAML files alphabetically preserving comments, anchor and with support for custom order.`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		searchDir, _ := cmd.Flags().GetString("search-dir")
-		if searchDir == "" {
-			cmd.MarkFlagRequired("output-file")
-			cmd.MarkPersistentFlagRequired("input-file")
-		}
-	},
-	RunE: sort,
+	PreRunE: validateSortFlags,
+	RunE:    sort,
 }
 
 func init() {
 	rootCmd.AddCommand(sortCmd)
 	sortCmd.Flags().StringVarP(&OutputFile, "output-file", "o", "", "The YAML file to output sorted content to.")
+	sortCmd.Flags().BoolVarP(&InPlace, "in-place", "w", false, "Replace input files with sorted content")
 }
 
 func sort(cmd *cobra.Command, args []string) error {
+	if len(args) > 0 {
+		return parallelProcessing(args, runtime.NumCPU()*2, sortYamlFile)
+	}
 	if Cfg.SearchDir != "" {
 		parallelism := runtime.NumCPU() * 2
 		yamls, err := internal.FindYamlFile(Cfg.SearchDir, InputFile)
@@ -43,7 +42,45 @@ func sort(cmd *cobra.Command, args []string) error {
 		}
 		return parallelProcessing(yamls, parallelism, sortYamlFile)
 	}
-	return sortYamlFile(InputFile, OutputFile, Cfg)
+	outputFile := OutputFile
+	if InPlace {
+		outputFile = InputFile
+	}
+	return sortYamlFile(InputFile, outputFile, Cfg)
+}
+
+func validateSortFlags(cmd *cobra.Command, args []string) error {
+	if Cfg.SearchDir != "" {
+		if len(args) > 0 {
+			return errors.New("positional files cannot be combined with --search-dir")
+		}
+		if InputFile == "" {
+			return errors.New("--input-file is required with --search-dir")
+		}
+		return nil
+	}
+	if len(args) > 0 {
+		if !InPlace {
+			return errors.New("positional files require --in-place")
+		}
+		if InputFile != "" || OutputFile != "" {
+			return errors.New("positional files cannot be combined with --input-file or --output-file")
+		}
+		return nil
+	}
+	if InputFile == "" {
+		return errors.New("--input-file is required")
+	}
+	if InPlace {
+		if OutputFile != "" {
+			return errors.New("--in-place cannot be combined with --output-file")
+		}
+		return nil
+	}
+	if OutputFile == "" {
+		return errors.New("--output-file is required unless --in-place is set")
+	}
+	return nil
 }
 
 func sortYamlFile(inputFile string, outputFile string, cfg internal.Config) error {
