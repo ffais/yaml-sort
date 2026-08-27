@@ -93,3 +93,33 @@ func TestSortYamlNodesReversesSequences(t *testing.T) {
 		t.Fatalf("got sequence %q, want %q", got, want)
 	}
 }
+
+func TestSortYamlNodesUsesCustomOrder(t *testing.T) {
+	var node yaml.Node
+	if err := yaml.Unmarshal([]byte("c: 3\na: 1\nb: 2\n"), &node); err != nil {
+		t.Fatal(err)
+	}
+
+	SortYamlNodes(&node, Config{CustomSort: []string{"b"}})
+
+	root := node.Content[0]
+	got := []string{root.Content[0].Value, root.Content[2].Value, root.Content[4].Value}
+	want := []string{"b", "a", "c"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got keys %q, want %q", got, want)
+	}
+}
+
+func TestAddEmptyLinesBeforeTopLevelKeysPreservesComments(t *testing.T) {
+	var node yaml.Node
+	if err := yaml.Unmarshal([]byte("first: 1\n# second comment\nsecond: 2\n"), &node); err != nil {
+		t.Fatal(err)
+	}
+
+	AddEmptyLinesBeforeTopLevelKeys(&node)
+
+	secondKey := node.Content[0].Content[2]
+	if secondKey.HeadComment != "\n# second comment" {
+		t.Fatalf("got head comment %q, want a leading empty line", secondKey.HeadComment)
+	}
+}
