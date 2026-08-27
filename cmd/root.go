@@ -16,9 +16,9 @@ var indent int
 var Cfg internal.Config
 
 var rootCmd = &cobra.Command{
-	Use:              "yaml-sort",
-	Short:            "Yaml-Sort format, sort and check content of YAML files",
-	PersistentPreRun: initConfig,
+	Use:               "yaml-sort",
+	Short:             "Yaml-Sort format, sort and check content of YAML files",
+	PersistentPreRunE: initConfig,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Welcome to Yaml-Sort! Use --help to see available commands.")
 	},
@@ -48,20 +48,15 @@ func init() {
 	viper.BindPFlag("search-dir", rootCmd.PersistentFlags().Lookup("search-dir"))
 }
 
-func initConfig(cmd *cobra.Command, args []string) {
+func initConfig(cmd *cobra.Command, args []string) error {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 		if err := viper.ReadInConfig(); err != nil {
-			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-				println("no file")
-			} else {
-				// Config file was found but another error was produced
-				panic(fmt.Errorf("fatal error config file: %s", err))
-			}
+			return fmt.Errorf("read config file %q: %w", cfgFile, err)
 		}
 	}
-	err := viper.Unmarshal(&Cfg)
-	if err != nil {
-		panic(fmt.Errorf("unable to decode into struct, %v", err))
+	if err := viper.Unmarshal(&Cfg); err != nil {
+		return fmt.Errorf("decode configuration: %w", err)
 	}
+	return nil
 }

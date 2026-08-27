@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -21,5 +22,17 @@ func TestParallelProcessingReturnsWorkerErrors(t *testing.T) {
 		if !strings.Contains(err.Error(), file) {
 			t.Errorf("error %q does not mention %q", err, file)
 		}
+	}
+}
+
+func TestInitConfigReturnsMissingFileError(t *testing.T) {
+	originalCfgFile := cfgFile
+	t.Cleanup(func() {
+		cfgFile = originalCfgFile
+	})
+	cfgFile = filepath.Join(t.TempDir(), "missing.yaml")
+
+	if err := initConfig(nil, nil); err == nil {
+		t.Fatal("initConfig returned nil error for a missing config file")
 	}
 }
