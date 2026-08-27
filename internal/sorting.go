@@ -55,6 +55,7 @@ func sortMapNodes(node *yaml.Node, cfg Config) {
 		customSort(&keys, cfg)
 	} else {
 		if cfg.Reverse {
+			slices.Sort(keys)
 			slices.Reverse(keys)
 		} else {
 			slices.Sort(keys)
@@ -123,6 +124,7 @@ func customSort(keys *[]string, cfg Config) {
 		}
 	}
 	if cfg.Reverse {
+		slices.Sort(*keys)
 		slices.Reverse(*keys)
 	} else {
 		slices.Sort(*keys)

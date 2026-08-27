@@ -94,6 +94,34 @@ func TestSortYamlNodesReversesSequences(t *testing.T) {
 	}
 }
 
+func TestSortYamlNodesSortsMappingsInReverseOrder(t *testing.T) {
+	tests := []struct {
+		name string
+		cfg  Config
+	}{
+		{name: "default order", cfg: Config{Reverse: true}},
+		{name: "empty custom order", cfg: Config{Reverse: true, CustomSort: []string{}}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var node yaml.Node
+			if err := yaml.Unmarshal([]byte("c: 3\na: 1\nd: 4\ny: 25\n"), &node); err != nil {
+				t.Fatal(err)
+			}
+
+			SortYamlNodes(&node, test.cfg)
+
+			root := node.Content[0]
+			got := []string{root.Content[0].Value, root.Content[2].Value, root.Content[4].Value, root.Content[6].Value}
+			want := []string{"y", "d", "c", "a"}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("got keys %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 func TestSortYamlNodesUsesCustomOrder(t *testing.T) {
 	var node yaml.Node
 	if err := yaml.Unmarshal([]byte("c: 3\na: 1\nb: 2\n"), &node); err != nil {
