@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -45,11 +46,43 @@ func WriteToFile(filePath string, documents []*yaml.Node, cfg Config) {
 			log.Fatalf("Error marshaling YAML: %v", err)
 		}
 	}
-	// Write to output file
-	err := os.WriteFile(filePath, []byte(output.String()), 0644)
+	err := writeFileAtomically(filePath, []byte(output.String()))
 	if err != nil {
 		log.Fatalf("Error writing file: %v", err)
 	}
+}
+
+func writeFileAtomically(filePath string, data []byte) error {
+	mode := os.FileMode(0644)
+	if info, err := os.Stat(filePath); err == nil {
+		mode = info.Mode().Perm()
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	tempFile, err := os.CreateTemp(filepath.Dir(filePath), "."+filepath.Base(filePath)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	tempPath := tempFile.Name()
+	defer os.Remove(tempPath)
+
+	if err := tempFile.Chmod(mode); err != nil {
+		tempFile.Close()
+		return err
+	}
+	if _, err := tempFile.Write(data); err != nil {
+		tempFile.Close()
+		return err
+	}
+	if err := tempFile.Sync(); err != nil {
+		tempFile.Close()
+		return err
+	}
+	if err := tempFile.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tempPath, filePath)
 }
 
 func FindYamlFile(searchRoot string, file string) ([]string, error) {
